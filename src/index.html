@@ -7,17 +7,25 @@
 </head>
 <body>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('search')">🔍 検索</button>
-    <button class="tab" onclick="switchTab('intro')">📘 はじめに</button>
-  </div>
-  <div id="status">🔄 データ読み込み中...</div>
-  <div id="search-tab">
-    <input type="text" id="searchInput" placeholder="キーワードを入力..." oninput="searchData()" />
-    <div id="results"></div>
+    <button class="tab active" onclick="switchTab('top')">🏠 TOPページ</button>
+    <button class="tab" onclick="switchTab('rule')">📘 鯖ルール</button>
+    <button class="tab" onclick="switchTab('case')">⚖ 判例説明</button>
   </div>
 
-  <div id="intro-tab" style="display:none;">
-    <p>ここには「はじめに」シートの内容を将来的に表示可能です。</p>
+  <div id="status">🔄 データ読み込み中...</div>
+
+  <div id="top-tab">
+    <div id="intro-content">はじめにデータを読み込み中...</div>
+  </div>
+
+  <div id="rule-tab" style="display:none;">
+    <input type="text" id="ruleSearchInput" placeholder="鯖ルール内を検索..." oninput="searchData('rule')" />
+    <div id="rule-results"></div>
+  </div>
+
+  <div id="case-tab" style="display:none;">
+    <input type="text" id="caseSearchInput" placeholder="判例説明内を検索..." oninput="searchData('case')" />
+    <div id="case-results"></div>
   </div>
 
   <script src="script.js"></script>
