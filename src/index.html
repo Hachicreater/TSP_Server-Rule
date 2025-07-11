@@ -15,7 +15,12 @@
   <div id="status">🔄 データ読み込み中...</div>
 
   <div id="top-tab">
-    <div id="intro-content">はじめにデータを読み込み中...</div>
+    <div id="intro-content">
+      <h2>はじめに</h2>
+      <p>※ はじめに内容は将来的にGASで装飾含めて表示予定</p>
+    </div>
+    <input type="text" id="topSearchInput" placeholder="すべてのルールを検索..." oninput="searchData('top')" />
+    <div id="top-results"></div>
   </div>
 
   <div id="rule-tab" style="display:none;">
