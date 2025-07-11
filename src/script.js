@@ -1,15 +1,25 @@
 const SHEETS = [
   {
     name: "鯖ルール",
+    key: "rule",
     url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtXCOh9f-t9vujeZ4SND1w1G6riZd8Sw4u4LglOk7-3RmZzVN0M8NXOWvnoEgVSMaoEqTot6ezwx2X/pub?gid=699240754&single=true&output=csv"
   },
   {
     name: "判例説明",
+    key: "case",
     url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtXCOh9f-t9vujeZ4SND1w1G6riZd8Sw4u4LglOk7-3RmZzVN0M8NXOWvnoEgVSMaoEqTot6ezwx2X/pub?gid=2069126754&single=true&output=csv"
+  },
+  {
+    name: "はじめに",
+    key: "intro",
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtXCOh9f-t9vujeZ4SND1w1G6riZd8Sw4u4LglOk7-3RmZzVN0M8NXOWvnoEgVSMaoEqTot6ezwx2X/pub?gid=0&single=true&output=csv"
   }
 ];
 
-let allData = [];
+const allData = {
+  rule: [],
+  case: []
+};
 
 window.onload = async () => {
   const status = document.getElementById("status");
@@ -18,25 +28,29 @@ window.onload = async () => {
     for (const sheet of SHEETS) {
       const res = await fetch(sheet.url);
       const text = await res.text();
-      const rows = text.trim().split("\n").slice(1); // ヘッダー行を除く
+      const rows = text.trim().split("\n").slice(1);
 
       for (const row of rows) {
         const columns = parseCSVRow(row);
         if (!columns[0] && !columns[1] && !columns[2]) continue;
-        allData.push({
-          sheet: sheet.name,
-          管理ID: columns[0] || "",
-          タイトル: columns[1] || "",
-          内容: columns[2] || ""
-        });
+
+        if (sheet.key === "intro") {
+          document.getElementById("intro-content").innerHTML += `<p>${columns[0]}</p>`;
+        } else {
+          allData[sheet.key].push({
+            管理ID: columns[0] || "",
+            タイトル: columns[1] || "",
+            内容: columns[2] || ""
+          });
+        }
       }
     }
 
-    console.log("データ読み込み完了", allData);
+    console.log("読み込み完了", allData);
     status.textContent = "✅ 検索の準備ができました！";
   } catch (err) {
-    console.error("データ読み込みエラー", err);
-    status.textContent = "❌ データ読み込みに失敗しました";
+    console.error("読み込みエラー", err);
+    status.textContent = "❌ データ取得に失敗しました。";
   }
 };
 
@@ -66,12 +80,15 @@ function parseCSVRow(row) {
   return result;
 }
 
-function searchData() {
-  const keyword = document.getElementById("searchInput").value.toLowerCase();
-  const results = document.getElementById("results");
+function searchData(type) {
+  const input = document.getElementById(`${type}SearchInput`);
+  const results = document.getElementById(`${type}-results`);
+  const keyword = input.value.trim().toLowerCase();
   results.innerHTML = "";
 
-  const filtered = allData.filter(row =>
+  if (!keyword) return;
+
+  const filtered = allData[type].filter(row =>
     row.管理ID.toString().toLowerCase().includes(keyword) ||
     row.タイトル.toString().toLowerCase().includes(keyword) ||
     row.内容.toString().toLowerCase().includes(keyword)
@@ -85,7 +102,7 @@ function searchData() {
   filtered.forEach(row => {
     results.innerHTML += `
       <div class="result">
-        <div class="sheet">📄 ${row.sheet}</div>
+        <div class="sheet">📄 ${type === "rule" ? "鯖ルール" : "判例説明"}</div>
         <div class="title">${row.タイトル}</div>
         <div class="content">${row.内容}</div>
       </div>
@@ -95,14 +112,8 @@ function searchData() {
 
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('search-tab').style.display = 'none';
-  document.getElementById('intro-tab').style.display = 'none';
+  document.querySelectorAll('#top-tab, #rule-tab, #case-tab').forEach(el => el.style.display = 'none');
 
-  if (tab === 'search') {
-    document.querySelector('.tab:nth-child(1)').classList.add('active');
-    document.getElementById('search-tab').style.display = 'block';
-  } else {
-    document.querySelector('.tab:nth-child(2)').classList.add('active');
-    document.getElementById('intro-tab').style.display = 'block';
-  }
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById(`${tab}-tab`).style.display = 'block';
 }
