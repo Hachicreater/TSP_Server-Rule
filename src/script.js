@@ -1,33 +1,68 @@
+const SHEETS = [
+  {
+    name: "鯖ルール",
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtXCOh9f-t9vujeZ4SND1w1G6riZd8Sw4u4LglOk7-3RmZzVN0M8NXOWvnoEgVSMaoEqTot6ezwx2X/pub?gid=699240754&single=true&output=csv"
+  },
+  {
+    name: "判例説明",
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtXCOh9f-t9vujeZ4SND1w1G6riZd8Sw4u4LglOk7-3RmZzVN0M8NXOWvnoEgVSMaoEqTot6ezwx2X/pub?gid=2069126754&single=true&output=csv"
+  }
+];
+
 let allData = [];
 
-async function fetchData() {
-  const res = await fetch('/.netlify/functions/fetchData');
-  allData = await res.json();
-  console.log('データ取得完了', allData);
+window.onload = async () => {
+  for (const sheet of SHEETS) {
+    const res = await fetch(sheet.url);
+    const text = await res.text();
+    const rows = text.trim().split("\n").slice(1); // ヘッダー行を除く
+
+    for (const row of rows) {
+      const columns = parseCSVRow(row);
+      if (!columns[0] && !columns[1] && !columns[2]) continue; // 空行除外
+      allData.push({
+        sheet: sheet.name,
+        管理ID: columns[0] || "",
+        タイトル: columns[1] || "",
+        内容: columns[2] || ""
+      });
+    }
+  }
+  console.log("データ読み込み完了", allData);
+};
+
+function parseCSVRow(row) {
+  const regex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^\",]+)|)(?:,|$)/g;
+  const result = [];
+  let match;
+  while ((match = regex.exec(row)) !== null) {
+    result.push((match[1] || match[2] || "").replace(/""/g, '"'));
+  }
+  return result;
 }
 
 function searchData() {
-  const keyword = document.getElementById('searchInput').value.toLowerCase();
-  const results = document.getElementById('results');
-  results.innerHTML = '';
+  const keyword = document.getElementById("searchInput").value.toLowerCase();
+  const results = document.getElementById("results");
+  results.innerHTML = "";
 
-  const filtered = allData.filter(entry =>
-    entry.管理ID.toLowerCase().includes(keyword) ||
-    entry.タイトル.toLowerCase().includes(keyword) ||
-    entry.内容.toLowerCase().includes(keyword)
+  const filtered = allData.filter(row =>
+    row.管理ID.toLowerCase().includes(keyword) ||
+    row.タイトル.toLowerCase().includes(keyword) ||
+    row.内容.toLowerCase().includes(keyword)
   );
 
   if (filtered.length === 0) {
-    results.innerHTML = '<div class="result">該当データなし。</div>';
+    results.innerHTML = "<div class='result'>該当データがありません。</div>";
     return;
   }
 
-  filtered.forEach(entry => {
+  filtered.forEach(row => {
     results.innerHTML += `
       <div class="result">
-        <div class="sheet">📄 ${entry.sheet}</div>
-        <div class="title">${entry.タイトル}</div>
-        <div class="content">${entry.内容}</div>
+        <div class="sheet">📄 ${row.sheet}</div>
+        <div class="title">${row.タイトル}</div>
+        <div class="content">${row.内容}</div>
       </div>
     `;
   });
@@ -46,5 +81,3 @@ function switchTab(tab) {
     document.getElementById('intro-tab').style.display = 'block';
   }
 }
-
-window.onload = fetchData;
