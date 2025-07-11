@@ -12,24 +12,32 @@ const SHEETS = [
 let allData = [];
 
 window.onload = async () => {
-  for (const sheet of SHEETS) {
-    const res = await fetch(sheet.url);
-    const text = await res.text();
-    const rows = text.trim().split("\n").slice(1); // ヘッダー行を除く
+  const status = document.getElementById("status");
+  try {
+    for (const sheet of SHEETS) {
+      const res = await fetch(sheet.url);
+      const text = await res.text();
+      const rows = text.trim().split("\n").slice(1); // ヘッダー行除去
 
-    for (const row of rows) {
-      const columns = parseCSVRow(row);
-      if (!columns[0] && !columns[1] && !columns[2]) continue; // 空行除外
-      allData.push({
-        sheet: sheet.name,
-        管理ID: columns[0] || "",
-        タイトル: columns[1] || "",
-        内容: columns[2] || ""
-      });
+      for (const row of rows) {
+        const columns = parseCSVRow(row);
+        if (!columns[0] && !columns[1] && !columns[2]) continue;
+        allData.push({
+          sheet: sheet.name,
+          管理ID: columns[0] || "",
+          タイトル: columns[1] || "",
+          内容: columns[2] || ""
+        });
+      }
     }
+    console.log("データ読み込み完了", allData);
+    status.textContent = "✅ 検索の準備ができました！";
+  } catch (err) {
+    console.error("データ読み込みエラー", err);
+    status.textContent = "❌ データ読み込みに失敗しました";
   }
-  console.log("データ読み込み完了", allData);
 };
+
 
 function parseCSVRow(row) {
   const regex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^\",]+)|)(?:,|$)/g;
