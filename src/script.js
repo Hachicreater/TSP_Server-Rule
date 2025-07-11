@@ -38,6 +38,18 @@ window.onload = async () => {
   }
 };
 
+window.onload = async () => {
+  const status = document.getElementById("status");
+
+  try {
+    ...
+    status.textContent = "✅ 検索の準備ができました！";
+  } catch (err) {
+    console.error("読み込みエラー", err);
+    status.textContent = "❌ データ読み込みに失敗しました";
+  }
+};
+
 
 function parseCSVRow(row) {
   const regex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^\",]+)|)(?:,|$)/g;
@@ -55,9 +67,9 @@ function searchData() {
   results.innerHTML = "";
 
   const filtered = allData.filter(row =>
-    row.管理ID.toLowerCase().includes(keyword) ||
-    row.タイトル.toLowerCase().includes(keyword) ||
-    row.内容.toLowerCase().includes(keyword)
+  row.管理ID.toString().toLowerCase().includes(keyword) ||
+  row.タイトル.toString().toLowerCase().includes(keyword) ||
+  row.内容.toString().toLowerCase().includes(keyword)
   );
 
   if (filtered.length === 0) {
