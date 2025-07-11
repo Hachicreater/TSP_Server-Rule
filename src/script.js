@@ -46,13 +46,23 @@ window.onload = async () => {
       }
     }
 
-    console.log("読み込み完了", allData);
+    renderAllLists(); // 初期一覧を表示
     status.textContent = "✅ 検索の準備ができました！";
   } catch (err) {
     console.error("読み込みエラー", err);
     status.textContent = "❌ データ取得に失敗しました。";
   }
 };
+
+function renderAllLists() {
+  ["rule", "case"].forEach(type => {
+    const container = document.getElementById(`${type}-results`);
+    container.innerHTML = "";
+    allData[type].forEach(row => {
+      container.innerHTML += renderResult(row, type);
+    });
+  });
+}
 
 function parseCSVRow(row) {
   const result = [];
@@ -80,15 +90,42 @@ function parseCSVRow(row) {
   return result;
 }
 
+function renderResult(row, type) {
+  return `
+    <div class="result">
+      <div class="sheet">📄 ${type === "rule" ? "鯖ルール" : type === "case" ? "判例説明" : type}</div>
+      <div class="title">${row.タイトル}</div>
+      <div class="content">${row.内容}</div>
+    </div>
+  `;
+}
+
 function searchData(type) {
-  const input = document.getElementById(`${type}SearchInput`);
+  let keyword = "";
+  let targetList = [];
+
+  if (type === "top") {
+    keyword = document.getElementById("topSearchInput").value.trim().toLowerCase();
+    targetList = [...allData.rule, ...allData.case];
+  } else {
+    keyword = document.getElementById(`${type}SearchInput`).value.trim().toLowerCase();
+    targetList = allData[type];
+  }
+
   const results = document.getElementById(`${type}-results`);
-  const keyword = input.value.trim().toLowerCase();
   results.innerHTML = "";
 
-  if (!keyword) return;
+  if (!keyword) {
+    if (type !== "top") {
+      // 通常ページでは検索文字なし → 全件表示
+      allData[type].forEach(row => {
+        results.innerHTML += renderResult(row, type);
+      });
+    }
+    return;
+  }
 
-  const filtered = allData[type].filter(row =>
+  const filtered = targetList.filter(row =>
     row.管理ID.toString().toLowerCase().includes(keyword) ||
     row.タイトル.toString().toLowerCase().includes(keyword) ||
     row.内容.toString().toLowerCase().includes(keyword)
@@ -100,13 +137,7 @@ function searchData(type) {
   }
 
   filtered.forEach(row => {
-    results.innerHTML += `
-      <div class="result">
-        <div class="sheet">📄 ${type === "rule" ? "鯖ルール" : "判例説明"}</div>
-        <div class="title">${row.タイトル}</div>
-        <div class="content">${row.内容}</div>
-      </div>
-    `;
+    results.innerHTML += renderResult(row, type);
   });
 }
 
