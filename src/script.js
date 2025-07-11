@@ -13,11 +13,12 @@ let allData = [];
 
 window.onload = async () => {
   const status = document.getElementById("status");
+
   try {
     for (const sheet of SHEETS) {
       const res = await fetch(sheet.url);
       const text = await res.text();
-      const rows = text.trim().split("\n").slice(1); // ヘッダー行除去
+      const rows = text.trim().split("\n").slice(1); // ヘッダー行を除く
 
       for (const row of rows) {
         const columns = parseCSVRow(row);
@@ -30,6 +31,7 @@ window.onload = async () => {
         });
       }
     }
+
     console.log("データ読み込み完了", allData);
     status.textContent = "✅ 検索の準備ができました！";
   } catch (err) {
@@ -38,26 +40,29 @@ window.onload = async () => {
   }
 };
 
-window.onload = async () => {
-  const status = document.getElementById("status");
-
-  try {
-    ...
-    status.textContent = "✅ 検索の準備ができました！";
-  } catch (err) {
-    console.error("読み込みエラー", err);
-    status.textContent = "❌ データ読み込みに失敗しました";
-  }
-};
-
-
 function parseCSVRow(row) {
-  const regex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^\",]+)|)(?:,|$)/g;
   const result = [];
-  let match;
-  while ((match = regex.exec(row)) !== null) {
-    result.push((match[1] || match[2] || "").replace(/""/g, '"'));
+  let insideQuote = false;
+  let cell = "";
+
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    const nextChar = row[i + 1];
+
+    if (char === '"' && insideQuote && nextChar === '"') {
+      cell += '"';
+      i++;
+    } else if (char === '"') {
+      insideQuote = !insideQuote;
+    } else if (char === ',' && !insideQuote) {
+      result.push(cell);
+      cell = "";
+    } else {
+      cell += char;
+    }
   }
+
+  result.push(cell);
   return result;
 }
 
@@ -67,9 +72,9 @@ function searchData() {
   results.innerHTML = "";
 
   const filtered = allData.filter(row =>
-  row.管理ID.toString().toLowerCase().includes(keyword) ||
-  row.タイトル.toString().toLowerCase().includes(keyword) ||
-  row.内容.toString().toLowerCase().includes(keyword)
+    row.管理ID.toString().toLowerCase().includes(keyword) ||
+    row.タイトル.toString().toLowerCase().includes(keyword) ||
+    row.内容.toString().toLowerCase().includes(keyword)
   );
 
   if (filtered.length === 0) {
